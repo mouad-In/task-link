@@ -1,0 +1,96 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+// Layouts
+import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
+
+// Pages
+import TaskLinkLanding from './pages/TaskLinkLanding';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Tasks from './pages/Tasks';
+import TaskDetail from './pages/TaskDetail';
+import CreateTask from './pages/CreateTask';
+import Messages from './pages/Messages';
+import Profile from './pages/Profile';
+import TaskMap from './pages/TaskMap';
+import Admin from './pages/Admin';
+
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+// Public Route Component (redirect if already authenticated)
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Landing Page - Public */}
+        <Route path="/" element={<TaskLinkLanding />} />
+
+        {/* Auth Routes */}
+        <Route element={<PublicRoute><AuthLayout /></PublicRoute>}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        {/* Protected Routes */}
+        <Route element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
+          {/* Common Routes */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/create" element={
+            <ProtectedRoute allowedRoles={['client']}>
+              <CreateTask />
+            </ProtectedRoute>
+          } />
+          <Route path="/tasks/:id" element={<TaskDetail />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/map" element={<TaskMap />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Admin />
+            </ProtectedRoute>
+          } />
+        </Route>
+
+        {/* Default Redirect */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
