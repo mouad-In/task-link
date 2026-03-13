@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { applicationService } from '../../services/api';
+import { addToast } from '../notifications/notificationsSlice';
 
 const initialState = {
   applications: [],
@@ -126,28 +127,41 @@ const applicationsSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(createApplication.fulfilled, (state, action) => {
+      .addCase(createApplication.fulfilled, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.applications.push(action.payload);
+        thunkAPI.dispatch(addToast({ message: 'Application submitted successfully!', type: 'success' }));
       })
-      .addCase(createApplication.rejected, (state, action) => {
+      .addCase(createApplication.rejected, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.error = action.payload;
+        thunkAPI.dispatch(addToast({ message: action.payload || 'Failed to submit application', type: 'error' }));
       })
       // Update Application Status
       .addCase(updateApplicationStatus.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateApplicationStatus.fulfilled, (state, action) => {
+      .addCase(updateApplicationStatus.fulfilled, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.applications = state.applications.map((app) =>
           app.id === action.payload.id ? action.payload : app
         );
+        const status = action.payload.status;
+        let message = '';
+        if (status === 'accepted') {
+          message = 'Application accepted! Task assigned.';
+        } else if (status === 'rejected') {
+          message = 'Application rejected.';
+        }
+        if (message) {
+          thunkAPI.dispatch(addToast({ message, type: 'success' }));
+        }
       })
-      .addCase(updateApplicationStatus.rejected, (state, action) => {
+      .addCase(updateApplicationStatus.rejected, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.error = action.payload;
+        thunkAPI.dispatch(addToast({ message: action.payload || 'Failed to update application', type: 'error' }));
       });
   },
 });

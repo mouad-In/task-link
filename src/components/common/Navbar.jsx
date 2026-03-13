@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { logout } from '../../features/auth/authSlice';
 
+
 const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -47,10 +48,10 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
         {/* Right section */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
             <Bell size={24} className="text-gray-600" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          </Link>
 
           {/* Messages */}
           <Link 

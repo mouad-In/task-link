@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { taskService } from '../../services/api';
+import { addToast } from '../notifications/notificationsSlice';
 
 const initialState = {
   tasks: [],
@@ -154,10 +155,11 @@ const tasksSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(createTask.fulfilled, (state, action) => {
+      .addCase(createTask.fulfilled, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.tasks.push(action.payload);
         state.filteredTasks.push(action.payload);
+        thunkAPI.dispatch(addToast({ message: 'Task created and published successfully!', type: 'success' }));
       })
       .addCase(createTask.rejected, (state, action) => {
         state.isLoading = false;
@@ -168,7 +170,7 @@ const tasksSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateTask.fulfilled, (state, action) => {
+      .addCase(updateTask.fulfilled, (state, action, thunkAPI) => {
         state.isLoading = false;
         state.tasks = state.tasks.map((task) =>
           task.id === action.payload.id ? action.payload : task
@@ -177,6 +179,7 @@ const tasksSlice = createSlice({
           task.id === action.payload.id ? action.payload : task
         );
         state.currentTask = action.payload;
+        thunkAPI.dispatch(addToast({ message: 'Task updated successfully!', type: 'success' }));
       })
       .addCase(updateTask.rejected, (state, action) => {
         state.isLoading = false;

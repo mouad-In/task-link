@@ -19,9 +19,10 @@ const Sidebar = ({ isOpen }) => {
   const clientLinks = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/tasks', icon: ListTodo, label: 'My Tasks' },
+    { to: '/workers', icon: Users, label: 'Find Workers' },
     { to: '/tasks/create', icon: Briefcase, label: 'Create Task' },
     { to: '/messages', icon: MessageSquare, label: 'Messages' },
-    { to: '/profile/:id', icon: Star, label: 'Reviews' },
+    { to: '/reviews', icon: Star, label: 'Reviews' },
   ];
 
   const workerLinks = [

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
+import ToastContainer from '../components/ui/Toast';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -24,6 +25,7 @@ const MainLayout = () => {
         <div className="p-6">
           <Outlet />
         </div>
+        <ToastContainer />
       </main>
     </div>
   );
