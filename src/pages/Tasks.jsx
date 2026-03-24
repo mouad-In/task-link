@@ -246,6 +246,11 @@ const Tasks = () => {
 
                   <div className="mt-4 pt-3 border-t border-gray-200">
                     <Badge variant="default">{task.category}</Badge>
+                    {task.applicationsCount > 0 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {task.applicationsCount} applications
+                      </Badge>
+                    )}
                   </div>
                 </Card>
               </Link>

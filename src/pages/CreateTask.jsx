@@ -63,6 +63,7 @@ const CreateTask = ({ isEdit = false }) => {
     const taskData = {
       ...data,
       requiredSkills: skills,
+      comments: [],
       coordinates: { lat: 40.7128, lng: -74.0060 }, // Default coordinates
     };
     

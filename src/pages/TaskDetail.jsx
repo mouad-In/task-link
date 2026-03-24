@@ -11,16 +11,20 @@ import {
   XCircle,
   Edit,
   Trash2,
-  Send
+  Send,
+  MessageCircle
+  
 } from 'lucide-react';
 import { fetchTaskById, deleteTask, assignWorker } from '../features/tasks/tasksSlice';
 import { fetchApplicationsByTask, createApplication, updateApplicationStatus } from '../features/applications/applicationsSlice';
+import { fetchCommentsByTask, addComment } from '../features/comments/commentsSlice';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import { useForm } from 'react-hook-form';
+import { Star } from 'lucide-react';
 
 const TaskDetail = () => {
   const { id } = useParams();
@@ -29,16 +33,19 @@ const TaskDetail = () => {
 
   const { currentTask, isLoading: taskLoading } = useSelector((state) => state.tasks);
   const { applications, isLoading: appsLoading } = useSelector((state) => state.applications);
+  const { commentsByTask, isLoading: commentsLoading } = useSelector((state) => state.comments);
   const { user } = useSelector((state) => state.auth);
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [newComment, setNewComment] = useState('');
 
   const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
     dispatch(fetchTaskById(id));
     dispatch(fetchApplicationsByTask(id));
+    dispatch(fetchCommentsByTask(id));
   }, [dispatch, id]);
 
   const handleApply = (data) => {
@@ -61,6 +68,13 @@ const TaskDetail = () => {
 
   const handleRejectApplication = (applicationId) => {
     dispatch(updateApplicationStatus({ applicationId, status: 'rejected' }));
+  };
+
+  const handleAddComment = () => {
+    if (newComment.trim() && user) {
+      dispatch(addComment({ taskId: id, content: newComment.trim() }));
+      setNewComment('');
+    }
   };
 
   const getStatusBadgeVariant = (status) => {
@@ -87,6 +101,7 @@ const TaskDetail = () => {
   const isWorker = user?.role === 'worker';
   const hasApplied = applications.some(app => app.workerId === user?.id);
   const pendingApplications = applications.filter(app => app.status === 'pending');
+  const taskComments = commentsByTask[id] || [];
 
   return (
     <>
@@ -177,61 +192,135 @@ const TaskDetail = () => {
               </Card>
 
               {/* Applications */}
-              {isClient && (
-                <Card>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800">Applications</h2>
-                    {pendingApplications.length > 0 && (
-                      <Badge variant="warning">{pendingApplications.length} pending</Badge>
-                    )}
-                  </div>
-                  {appsLoading ? (
-                    <p>Loading...</p>
-                  ) : applications.length === 0 ? (
-                    <p className="text-gray-600">No applications yet.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {applications.map((app) => (
-                        <div key={app.id} className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-medium text-gray-800">Worker #{app.workerId}</p>
-                              <p className="text-sm text-gray-600">${app.price} • {app.deliveryTime}</p>
-                              <p className="text-sm text-gray-600 mt-2">{app.message}</p>
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Applications ({applications.length})
+                  </h2>
+                </div>
+                {appsLoading ? (
+                  <p>Loading applications...</p>
+                ) : applications.length === 0 ? (
+                  <p className="text-gray-600 text-center py-8">No applications yet. Be the first to apply!</p>
+                ) : (
+                  <div className="space-y-4">
+                    {applications.map((app) => (
+                      <div key={app.id} className="p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
+                              W{app.workerId}
                             </div>
-                            <div className="flex items-center gap-2">
-                              {app.status === 'pending' ? (
-                                <>
-                                  <Button 
-                                    size="sm" 
-                                    variant="success"
-                                    onClick={() => handleAcceptApplication(app.id)}
-                                  >
-                                    <CheckCircle size={16} className="mr-1" />
-                                    Accept
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="error"
-                                    onClick={() => handleRejectApplication(app.id)}
-                                  >
-                                    <XCircle size={16} className="mr-1" />
-                                    Reject
-                                  </Button>
-                                </>
-                              ) : (
-                                <Badge variant={getStatusBadgeVariant(app.status)}>
-                                  {app.status}
-                                </Badge>
-                              )}
+                            <div>
+                              <p className="font-semibold text-gray-800">Worker #{app.workerId}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex">
+                                  {[1,2,3,4,5].map((star) => (
+                                    <Star key={star} size={14} className="text-amber-400 fill-amber-400" />
+                                  ))}
+                                </div>
+                                <span className="text-sm text-gray-500">4.8 (127)</span>
+                              </div>
                             </div>
                           </div>
+                          <Badge variant={getStatusBadgeVariant(app.status)} size="lg">
+                            {app.status}
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              )}
+                        
+                        <div className="mb-4">
+                          <p className="font-semibold text-lg text-gray-900">${app.price}</p>
+                          <p className="text-sm text-gray-500">{app.deliveryTime} delivery</p>
+                        </div>
+
+                        <p className="text-gray-700 italic mb-4 leading-relaxed">
+                          "{app.message}"
+                        </p>
+
+                        {isClient && app.status === 'pending' && (
+                          <div className="flex gap-2 pt-4 border-t">
+                            <Button 
+                              size="sm" 
+                              variant="success"
+                              onClick={() => handleAcceptApplication(app.id)}
+                              className="flex-1"
+                            >
+                              <CheckCircle size={16} className="mr-2" />
+                              Accept
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => handleRejectApplication(app.id)}
+                            >
+                              <XCircle size={16} className="mr-2" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* Comments Section */}
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <MessageCircle size={20} />
+                    Comments ({commentsByTask[id]?.length || 0})
+                  </h2>
+                </div>
+                {commentsLoading ? (
+                  <p>Loading comments...</p>
+                ) : !commentsByTask[id] || commentsByTask[id].length === 0 ? (
+                  <p className="text-gray-600 text-center py-8">No comments yet. Be the first to comment!</p>
+                ) : (
+                  <div className="space-y-4 mb-6">
+                    {commentsByTask[id].map((comment) => (
+                      <div key={comment.id} className="p-4 bg-white border border-gray-200 rounded-xl">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            {comment.authorName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-800">{comment.authorName}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-gray-700 ml-13">{comment.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {user && (
+                  <div className="border-t pt-4">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Add a comment..."
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      rows="3"
+                    />
+                    <Button 
+                      className="mt-3 w-full"
+                      onClick={() => {
+                        if (newComment.trim()) {
+                          dispatch(addComment({ taskId: id, content: newComment.trim() }));
+                          setNewComment('');
+                        }
+                      }}
+                      disabled={!newComment.trim()}
+                    >
+                      Post Comment
+                    </Button>
+                  </div>
+                )}
+              </Card>
             </div>
 
             {/* Sidebar */}
