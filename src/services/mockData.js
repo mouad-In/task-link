@@ -94,6 +94,22 @@ export const tasks = [
     urgency: 'high',
     requiredSkills: ['Plumbing'],
     images: [],
+    comments: [
+      {
+        id: 'c1',
+        authorId: '2',
+        authorName: 'Sarah Johnson',
+        content: 'Hi! I can fix this for you. I specialize in plumbing repairs.',
+        createdAt: '2024-01-20T11:30:00Z'
+      },
+      {
+        id: 'c2',
+        authorId: '1',
+        authorName: 'John Smith',
+        content: '@Sarah Thanks for responding! Can you come tomorrow?',
+        createdAt: '2024-01-20T12:00:00Z'
+      }
+    ],
     status: 'published',
     createdAt: '2024-01-20T10:00:00Z',
     updatedAt: '2024-01-20T10:00:00Z',
@@ -110,6 +126,7 @@ export const tasks = [
     urgency: 'medium',
     requiredSkills: ['Painting'],
     images: [],
+    comments: [],
     status: 'in_progress',
     workerId: '2',
     assignedAt: '2024-01-18T10:00:00Z',
@@ -128,6 +145,7 @@ export const tasks = [
     urgency: 'high',
     requiredSkills: ['Cleaning'],
     images: [],
+    comments: [],
     status: 'assigned',
     workerId: '3',
     assignedAt: '2024-01-19T10:00:00Z',
@@ -146,6 +164,7 @@ export const tasks = [
     urgency: 'low',
     requiredSkills: ['Electrical', 'Installation'],
     images: [],
+    comments: [],
     status: 'published',
     createdAt: '2024-01-21T10:00:00Z',
     updatedAt: '2024-01-21T10:00:00Z',
@@ -162,6 +181,7 @@ export const tasks = [
     urgency: 'medium',
     requiredSkills: ['Carpentry'],
     images: [],
+    comments: [],
     status: 'completed',
     workerId: '2',
     assignedAt: '2024-01-10T10:00:00Z',

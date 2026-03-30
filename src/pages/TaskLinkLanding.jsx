@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Link2, UserPlus, Users, ArrowRight, Twitter, Linkedin, Instagram, Mail } from 'lucide-react';
+import { Link2, UserPlus, Users, ArrowRight, Twitter, Linkedin, Instagram, Mail, Users2, Star, Briefcase } from 'lucide-react';
+import FreelancersSection from '../components/ui/Freesection';
+
+
 
 // ─── Stable random data (generated once, never on re-render) ───────────────
 function makeStars(n) {
@@ -278,12 +281,14 @@ export default function TaskLinkLanding() {
           </div>
         </div>
       </div>
+      <FreelancersSection />
+      
 
       {/* ══════════════════ CTA ══════════════════ */}
       <div className="relative z-10 w-full bg-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className={`transition-all duration-1000 ${mounted?'opacity-100 translate-y-0':'opacity-0 translate-y-10'}`}
-               style={{transitionDelay:'2200ms'}}>
+               style={{transitionDelay:'2600ms'}}>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Ready to Get Started?</h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
               Join thousands of clients and workers already connected on TaskLink.

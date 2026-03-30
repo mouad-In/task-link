@@ -1,24 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Plus, Trash2 } from 'lucide-react';
-import { createTask } from '../features/tasks/tasksSlice';
+import { createTask, updateTask, fetchTaskById } from '../features/tasks/tasksSlice';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { categories, urgencyLevels } from '../services/mockData';
 
-const CreateTask = () => {
+const CreateTask = ({ isEdit = false }) => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currentTask } = useSelector((state) => state.tasks);
   const { user } = useSelector((state) => state.auth);
   const { isLoading } = useSelector((state) => state.tasks);
   
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  useEffect(() => {
+    if (isEdit && id) {
+      dispatch(fetchTaskById(id));
+    }
+  }, [dispatch, isEdit, id]);
+
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+    defaultValues: isEdit && currentTask ? currentTask : {}
+  });
+  
+  useEffect(() => {
+    if (isEdit && currentTask) {
+      // Populate form with current task data
+      setValue('title', currentTask.title || '');
+      setValue('description', currentTask.description || '');
+      setValue('budget', currentTask.budget || '');
+      setValue('category', currentTask.category || '');
+      setValue('urgency', currentTask.urgency || '');
+      setValue('location', currentTask.location || '');
+      if (currentTask.requiredSkills) {
+        setSkills(currentTask.requiredSkills);
+      }
+    }
+  }, [currentTask, isEdit, setValue]);
+
+
 
   const addSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
@@ -34,16 +62,18 @@ const CreateTask = () => {
   const onSubmit = (data) => {
     const taskData = {
       ...data,
-      clientId: user.id,
       requiredSkills: skills,
+      comments: [],
       coordinates: { lat: 40.7128, lng: -74.0060 }, // Default coordinates
     };
     
-    dispatch(createTask(taskData)).then((result) => {
-      if (createTask.fulfilled.match(result)) {
-        navigate('/tasks');
-      }
-    });
+    if (isEdit && id) {
+      dispatch(updateTask({ taskId: id, taskData }));
+    } else {
+      taskData.clientId = user.id;
+      dispatch(createTask(taskData));
+    }
+    navigate('/tasks');
   };
 
   return (

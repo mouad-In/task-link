@@ -18,7 +18,11 @@ import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import TaskMap from './pages/TaskMap';
+import Reviews from './pages/Reviews';
 import Admin from './pages/Admin';
+import Notifications from './pages/Notifications';
+import Workers from './pages/Workers';
+
 
 
 // Protected Route Component
@@ -74,12 +78,24 @@ function App() {
               <CreateTask />
             </ProtectedRoute>
           } />
+          <Route path="/tasks/edit/:id" element={
+            <ProtectedRoute allowedRoles={['client']}>
+              <CreateTask isEdit />
+            </ProtectedRoute>
+          } />
           <Route path="/tasks/:id" element={<TaskDetail />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/edit-profile/:id" element={<EditProfile />} />
 
           <Route path="/map" element={<TaskMap />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/workers" element={
+            <ProtectedRoute allowedRoles={['client']}>
+              <Workers />
+            </ProtectedRoute>
+          } />
           
           {/* Admin Routes */}
           <Route path="/admin" element={

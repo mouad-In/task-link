@@ -161,6 +161,33 @@ export const taskService = {
     await delay(300);
     return tasks.filter(t => t.status === 'published');
   },
+
+  async getComments(taskId) {
+    await delay(300);
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) {
+      throw new Error('Task not found');
+    }
+    return task.comments || [];
+  },
+
+  async addComment(taskId, commentData) {
+    await delay(500);
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) {
+      throw new Error('Task not found');
+    }
+    const newComment = {
+      id: `c${taskIndex + 1}-${tasks[taskIndex].comments.length + 1}`,
+      authorId: commentData.authorId,
+      authorName: commentData.authorName,
+      content: commentData.content,
+      createdAt: new Date().toISOString(),
+    };
+    tasks[taskIndex].comments.push(newComment);
+    tasks[taskIndex].updatedAt = new Date().toISOString();
+    return newComment;
+  },
 };
 
 // Application Service
