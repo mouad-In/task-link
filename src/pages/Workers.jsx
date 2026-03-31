@@ -14,7 +14,21 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
-import { categories } from '../services/mockData';
+
+const categories = [
+  'Plumbing',
+  'Electrical',
+  'Cleaning',
+  'Moving',
+  'Repair',
+  'Other'
+];
+
+const urgencyLevels = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' }
+];
 
 const Workers = () => {
   const dispatch = useDispatch();

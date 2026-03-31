@@ -5,310 +5,335 @@ import { updateUser } from '../features/auth/authSlice';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const INITIAL_FORM_STATE = {
-  firstName: '',
-  lastName:  '',
-  email:     '',
-  phone:     '',
-  location:  '',
+const INITIAL_FORM = {
+  firstName:   '',
+  lastName:    '',
+  email:       '',
+  dateOfBirth: '',
+  country:     'Morocco',
+  city:        '',
+  phoneCode:   '+212',
+  phone:       '',
 };
 
-const NAME_FIELDS = [
-  { label: 'First Name', name: 'firstName', type: 'text', placeholder: 'John' },
-  { label: 'Last Name',  name: 'lastName',  type: 'text', placeholder: 'Doe'  },
+const COUNTRIES = [
+  'Morocco', 'Algeria', 'Tunisia', 'Egypt', 'France', 'United States',
+  'United Kingdom', 'Canada', 'Germany', 'Spain', 'Italy', 'Netherlands',
+  'Belgium', 'Switzerland', 'Portugal', 'Saudi Arabia', 'UAE', 'Qatar',
 ];
 
-const CONTACT_FIELDS = [
-  { label: 'Email Address', name: 'email',    type: 'email', placeholder: 'john.doe@example.com' },
-  { label: 'Phone Number',  name: 'phone',    type: 'tel',   placeholder: '+1 (555) 000-0000'    },
-  { label: 'Location',      name: 'location', type: 'text',  placeholder: 'City, Country'        },
+const PHONE_CODES = [
+  { code: '+212', flag: '🇲🇦', label: 'MA' },
+  { code: '+213', flag: '🇩🇿', label: 'DZ' },
+  { code: '+216', flag: '🇹🇳', label: 'TN' },
+  { code: '+20',  flag: '🇪🇬', label: 'EG' },
+  { code: '+33',  flag: '🇫🇷', label: 'FR' },
+  { code: '+1',   flag: '🇺🇸', label: 'US' },
+  { code: '+44',  flag: '🇬🇧', label: 'GB' },
+  { code: '+49',  flag: '🇩🇪', label: 'DE' },
+  { code: '+34',  flag: '🇪🇸', label: 'ES' },
+  { code: '+39',  flag: '🇮🇹', label: 'IT' },
+  { code: '+966', flag: '🇸🇦', label: 'SA' },
+  { code: '+971', flag: '🇦🇪', label: 'AE' },
 ];
 
 const validate = (form) => {
   const errors = {};
-  if (!form.firstName.trim()) errors.firstName = 'First name is required.';
-  if (!form.lastName.trim())  errors.lastName  = 'Last name is required.';
+  if (!form.firstName.trim())   errors.firstName   = 'First name is required.';
+  if (!form.lastName.trim())    errors.lastName    = 'Last name is required.';
   if (!form.email.trim()) {
     errors.email = 'Email is required.';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
     errors.email = 'Enter a valid email address.';
   }
+  if (!form.dateOfBirth)        errors.dateOfBirth = 'Date is required.';
+  if (!form.city.trim())        errors.city        = 'Enter a city.';
+  if (!form.phone.trim())       errors.phone       = 'This field is required.';
   return errors;
 };
 
-// ─── Animated Background (Canvas, position: fixed) ───────────────────────────
+// ─── Animated Background ──────────────────────────────────────────────────────
 
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx    = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     let rafId;
-
-    const resize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener('resize', resize);
-
-    // Soft glowing orbs that drift slowly
     const ORBS = Array.from({ length: 6 }, (_, i) => ({
-      x:     Math.random() * window.innerWidth,
-      y:     Math.random() * window.innerHeight,
-      r:     180 + Math.random() * 160,
-      dx:    (Math.random() - 0.5) * 0.3,
-      dy:    (Math.random() - 0.5) * 0.3,
-      hue:   [260, 280, 300, 220, 245, 270][i],
-      alpha: 0.07 + Math.random() * 0.06,
+      x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+      r: 180 + Math.random() * 160, dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.3,
+      hue: [260, 280, 300, 220, 245, 270][i], alpha: 0.07 + Math.random() * 0.06,
     }));
-
-    // Rising sparkle particles
     const SPARKS = Array.from({ length: 45 }, () => ({
-      x:     Math.random() * window.innerWidth,
-      y:     Math.random() * window.innerHeight,
-      r:     0.8 + Math.random() * 1.8,
-      speed: 0.15 + Math.random() * 0.45,
-      maxA:  0.25 + Math.random() * 0.5,
-      phase: Math.random() * Math.PI * 2,
+      x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+      r: 0.8 + Math.random() * 1.8, speed: 0.15 + Math.random() * 0.45,
+      maxA: 0.25 + Math.random() * 0.5, phase: Math.random() * Math.PI * 2,
     }));
-
     let t = 0;
-
     const draw = () => {
       t += 0.008;
       const { width: W, height: H } = canvas;
-
-      // Deep dark base — fixed, does not scroll
       const bg = ctx.createLinearGradient(0, 0, W, H);
-      bg.addColorStop(0,   '#f0ecff');
-      bg.addColorStop(0.4, '#e8e0fa');
-      bg.addColorStop(0.75,'#f3eaf8');
-      bg.addColorStop(1,   '#eaf0ff');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
-
-      // Drifting orbs
+      bg.addColorStop(0, '#f0ecff'); bg.addColorStop(0.4, '#e8e0fa');
+      bg.addColorStop(0.75, '#f3eaf8'); bg.addColorStop(1, '#eaf0ff');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
       for (const orb of ORBS) {
-        orb.x += orb.dx;
-        orb.y += orb.dy;
-        if (orb.x < -orb.r)    orb.x = W + orb.r;
-        if (orb.x > W + orb.r) orb.x = -orb.r;
-        if (orb.y < -orb.r)    orb.y = H + orb.r;
-        if (orb.y > H + orb.r) orb.y = -orb.r;
-
+        orb.x += orb.dx; orb.y += orb.dy;
+        if (orb.x < -orb.r) orb.x = W + orb.r; if (orb.x > W + orb.r) orb.x = -orb.r;
+        if (orb.y < -orb.r) orb.y = H + orb.r; if (orb.y > H + orb.r) orb.y = -orb.r;
         const g = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r);
-        g.addColorStop(0, `hsla(${orb.hue}, 65%, 72%, ${orb.alpha})`);
-        g.addColorStop(1, `hsla(${orb.hue}, 65%, 72%, 0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
-        ctx.fill();
+        g.addColorStop(0, `hsla(${orb.hue},65%,72%,${orb.alpha})`);
+        g.addColorStop(1, `hsla(${orb.hue},65%,72%,0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2); ctx.fill();
       }
-
-      // Sparkles
       for (const s of SPARKS) {
         s.y -= s.speed;
-        if (s.y < -10) {
-          s.y = H + 10;
-          s.x = Math.random() * W;
-        }
+        if (s.y < -10) { s.y = H + 10; s.x = Math.random() * W; }
         const alpha = s.maxA * 0.3 * (0.5 + 0.5 * Math.sin(t * 2.5 + s.phase));
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle   = '#8b6ef0';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = '#8b6ef0';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       }
-
       rafId = requestAnimationFrame(draw);
     };
-
     draw();
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', resize);
-    };
+    return () => { cancelAnimationFrame(rafId); window.removeEventListener('resize', resize); };
   }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset:    0,
-        width:    '100vw',
-        height:   '100vh',
-        zIndex:   0,
-        display:  'block',
-        pointerEvents: 'none',
-      }}
-    />
-  );
+  return <canvas ref={canvasRef} aria-hidden="true" style={{ position:'fixed', inset:0, width:'100vw', height:'100vh', zIndex:0, display:'block', pointerEvents:'none' }} />;
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Field component ──────────────────────────────────────────────────────────
 
-const Avatar = ({ firstName, lastName }) => {
-  const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
-  return (
-    <div className="EPro-avatar" aria-label={`Avatar for ${firstName} ${lastName}`}>
-      {initials || '?'}
-    </div>
-  );
-};
-
-const FormField = ({ label, name, type = 'text', placeholder, value, onChange, onBlur, error }) => (
-  <div className="EPro-field">
-    <label htmlFor={`field-${name}`} className="EPro-label">{label}</label>
-    <input
-      id={`field-${name}`}
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      placeholder={placeholder}
-      autoComplete={name === 'email' ? 'email' : 'off'}
-      aria-invalid={Boolean(error)}
-      aria-describedby={error ? `${name}-error` : undefined}
-      className={`EPro-input${error ? ' EPro-input--error' : ''}`}
-    />
-    {error && (
-      <span id={`${name}-error`} className="EPro-field-error" role="alert">{error}</span>
+const Field = ({ label, required, error, children }) => (
+  <div className="EP-field">
+    {label && (
+      <label className="EP-label">
+        {label}{required && <span className="EP-required"> *</span>}
+      </label>
     )}
+    {children}
+    {error && <span className="EP-error"><span className="EP-error-dot">!</span>{error}</span>}
   </div>
 );
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const EditProfile = () => {
-  const { user }   = useSelector((state) => state.auth);
-  const dispatch   = useDispatch();
-  const navigate   = useNavigate();
+  const { user }  = useSelector((state) => state.auth);
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
 
-  const [form,    setForm]    = useState(INITIAL_FORM_STATE);
+  const [form,    setForm]    = useState(INITIAL_FORM);
   const [errors,  setErrors]  = useState({});
-  const [saving,  setSaving]  = useState(false);
   const [touched, setTouched] = useState({});
+  const [saving,  setSaving]  = useState(false);
+  const [photo,   setPhoto]   = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     if (user) {
-      setForm({
-        firstName: user.firstName ?? '',
-        lastName:  user.lastName  ?? '',
-        email:     user.email     ?? '',
-        phone:     user.phone     ?? '',
-        location:  user.location  ?? '',
-      });
+      const [city = '', state = ''] = (user.location || '').split(',').map(s => s.trim());
+      setForm(prev => ({
+        ...prev,
+        firstName:   user.firstName   || '',
+        lastName:    user.lastName    || '',
+        email:       user.email       || '',
+        phone:       user.phone       || '',
+        city,
+        country:     user.country     || 'Morocco',
+        dateOfBirth: user.dateOfBirth || '',
+        phoneCode:   user.phoneCode   || '+212',
+      }));
     }
   }, [user]);
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setTouched((prev) => ({ ...prev, [name]: true }));
-    setErrors((prev) => {
-      if (!prev[name]) return prev;
-      const { [name]: _, ...rest } = prev;
-      return rest;
-    });
+  const set = useCallback((name, value) => {
+    setForm(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setErrors(prev => { const { [name]: _, ...rest } = prev; return rest; });
   }, []);
 
-  const handleBlur = useCallback((e) => {
-    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
-  }, []);
+  const handleChange = useCallback((e) => set(e.target.name, e.target.value), [set]);
+  const handleBlur   = useCallback((e) => setTouched(prev => ({ ...prev, [e.target.name]: true })), []);
+
+  const handlePhoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setTouched(Object.fromEntries(Object.keys(form).map((k) => [k, true])));
+    const errs = validate(form);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      setTouched(Object.fromEntries(Object.keys(form).map(k => [k, true])));
       return;
     }
     setSaving(true);
     try {
-      await dispatch(updateUser(form));
+      const payload = { ...form, location: `${form.city}, ${form.country}` };
+      await dispatch(updateUser(payload));
       navigate(`/profile/${user._id}`);
     } catch (err) {
-      console.error('[EditProfile] Failed to update user:', err);
+      console.error('[EditProfile]', err);
     } finally {
       setSaving(false);
     }
   };
 
-  const isDirty = Object.keys(INITIAL_FORM_STATE).some(
-    (key) => form[key] !== (user?.[key] ?? '')
-  );
+  const err = (name) => touched[name] ? errors[name] : undefined;
+  const initials = `${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}`.toUpperCase() || '?';
 
   return (
     <>
       <style>{STYLES}</style>
-
-      {/* Fixed animated canvas — always fills the viewport */}
       <AnimatedBackground />
 
-      {/* Scrollable page content sits above the canvas */}
-      <main className="EPro-root" aria-labelledby="edit-profile-heading">
-        <div className="EPro-card">
+      <main className="EP-root">
+        <div className="EP-card">
 
-          <header className="EPro-header">
-            <Avatar firstName={form.firstName} lastName={form.lastName} />
-            <div>
-              <h1 id="edit-profile-heading" className="EPro-title">Edit Profile</h1>
-              <p className="EPro-subtitle">Update your personal information</p>
+          {/* ── Progress ── */}
+          <div className="EP-progress-wrap">
+            <span className="EP-progress-label">Profile completion</span>
+            <div className="EP-progress-bar"><div className="EP-progress-fill" /></div>
+          </div>
+
+          {/* ── Heading ── */}
+          <h1 className="EP-heading">A few last details, then you can check and publish your profile.</h1>
+          <p className="EP-subheading">
+            A professional photo helps you build trust. Update your personal and address information below.
+          </p>
+
+          <div className="EP-divider" />
+
+          <form onSubmit={handleSubmit} noValidate className="EP-form">
+
+            {/* ── Two-column: photo + fields ── */}
+            <div className="EP-top-row">
+
+              {/* Photo upload */}
+              <div className="EP-photo-col">
+                <div className="EP-avatar-wrap">
+                  {photoPreview
+                    ? <img src={photoPreview} alt="Profile" className="EP-avatar-img" />
+                    : <div className="EP-avatar-initials">{initials}</div>
+                  }
+                  <button type="button" className="EP-avatar-add" onClick={() => fileRef.current?.click()} aria-label="Add photo">+</button>
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
+                <button type="button" className="EP-upload-btn" onClick={() => fileRef.current?.click()}>
+                  + Upload photo
+                </button>
+                {!photoPreview && <p className="EP-photo-hint"><span className="EP-error-dot">!</span> Add a profile photo.</p>}
+              </div>
+
+              {/* Right fields */}
+              <div className="EP-fields-col">
+
+                {/* Name row */}
+                <div className="EP-row-2">
+                  <Field label="First Name" required error={err('firstName')}>
+                    <input name="firstName" value={form.firstName} onChange={handleChange} onBlur={handleBlur}
+                      placeholder="John" className={`EP-input${err('firstName') ? ' EP-input--err' : ''}`} />
+                  </Field>
+                  <Field label="Last Name" required error={err('lastName')}>
+                    <input name="lastName" value={form.lastName} onChange={handleChange} onBlur={handleBlur}
+                      placeholder="Doe" className={`EP-input${err('lastName') ? ' EP-input--err' : ''}`} />
+                  </Field>
+                </div>
+
+                {/* Email */}
+                <Field label="Email Address" required error={err('email')}>
+                  <input name="email" type="email" value={form.email} onChange={handleChange} onBlur={handleBlur}
+                    placeholder="john.doe@example.com" className={`EP-input${err('email') ? ' EP-input--err' : ''}`} />
+                </Field>
+
+                {/* Date of birth */}
+                <Field label="Date of Birth" required error={err('dateOfBirth')}>
+                  <div className="EP-input-icon-wrap">
+                    <input name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={handleChange} onBlur={handleBlur}
+                      className={`EP-input${err('dateOfBirth') ? ' EP-input--err' : ''}`} />
+                    <span className="EP-input-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </span>
+                  </div>
+                </Field>
+
+                {/* Country */}
+                <Field label="Country" required>
+                  <div className="EP-select-wrap">
+                    <select name="country" value={form.country} onChange={handleChange} className="EP-select">
+                      {COUNTRIES.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                    <span className="EP-select-arrow">▾</span>
+                  </div>
+                </Field>
+
+              </div>
             </div>
-          </header>
 
-          <form onSubmit={handleSubmit} noValidate>
+            <div className="EP-divider" />
 
-            <fieldset className="EPro-fieldset EPro-grid-2">
-              <legend className="EPro-legend">Name</legend>
-              {NAME_FIELDS.map((field) => (
-                <FormField
-                  key={field.name} {...field}
-                  value={form[field.name]}
+            {/* ── Address ── */}
+            <div className="EP-section-label">Address</div>
+
+            
+
+            <div className="EP-row-3">
+              <Field label="City" required error={err('city')}>
+                <input name="city" value={form.city} onChange={handleChange} onBlur={handleBlur}
+                  placeholder="Enter city" className={`EP-input${err('city') ? ' EP-input--err' : ''}`} />
+              </Field>
+             
+            </div>
+
+            <div className="EP-divider" />
+
+            {/* ── Phone ── */}
+            <div className="EP-section-label">Phone</div>
+
+            <Field label="Phone" required error={err('phone')}>
+              <div className="EP-phone-wrap">
+                <div className="EP-phone-code-wrap">
+                  <select
+                    name="phoneCode"
+                    value={form.phoneCode}
+                    onChange={handleChange}
+                    className="EP-phone-code"
+                  >
+                    {PHONE_CODES.map(p => (
+                      <option key={p.code} value={p.code}>{p.flag} {p.code}</option>
+                    ))}
+                  </select>
+                  <span className="EP-select-arrow">▾</span>
+                </div>
+                <input
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  error={touched[field.name] ? errors[field.name] : undefined}
+                  placeholder="Enter number"
+                  className={`EP-input EP-phone-input${err('phone') ? ' EP-input--err' : ''}`}
                 />
-              ))}
-            </fieldset>
+              </div>
+            </Field>
 
-            <fieldset className="EPro-fieldset">
-              <legend className="EPro-legend">Contact &amp; Location</legend>
-              {CONTACT_FIELDS.map((field) => (
-                <FormField
-                  key={field.name} {...field}
-                  value={form[field.name]}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched[field.name] ? errors[field.name] : undefined}
-                />
-              ))}
-            </fieldset>
+            <div className="EP-divider" />
 
-            <div className="EPro-actions">
-              <button
-                type="button"
-                className="EPro-btn EPro-btn--secondary"
-                onClick={() => navigate(-1)}
-                disabled={saving}
-              >
-                Cancel
+            {/* ── Actions ── */}
+            <div className="EP-actions">
+              <button type="button" className="EP-btn EP-btn--back" onClick={() => navigate(-1)} disabled={saving}>
+                Back
               </button>
-              <button
-                type="submit"
-                className="EPro-btn EPro-btn--primary"
-                disabled={saving || !isDirty}
-                aria-busy={saving}
-              >
-                {saving ? 'Saving…' : 'Save Changes'}
+              <button type="submit" className="EP-btn EP-btn--submit" disabled={saving} aria-busy={saving}>
+                {saving ? 'Saving…' : 'Review your profile'}
               </button>
             </div>
 
@@ -324,197 +349,394 @@ const EditProfile = () => {
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap');
 
-  /* Page layout — sits above fixed canvas */
-  .EPro-root {
+  .EP-root {
     position:        relative;
     z-index:         1;
     min-height:      100vh;
     display:         flex;
-    align-items:     center;
+    align-items:     flex-start;
     justify-content: center;
-    padding:         2.5rem 1rem;
+    padding:         2.5rem 1rem 4rem;
     font-family:     'DM Sans', sans-serif;
   }
 
-  /* Solid white card */
-  .EPro-card {
+  .EP-card {
+    position:      relative;
+    z-index:       2;
     width:         100%;
-    max-width:     500px;
-    border-radius: 22px;
-    padding:       2.25rem 2rem;
+    max-width:     760px;
     background:    #ffffff;
-    border:        1px solid rgba(180, 160, 255, 0.18);
-    box-shadow:
-      0 0 0 0.5px rgba(180, 160, 255, 0.12),
-      0 10px 50px rgba(0, 0, 0, 0.45);
-    animation: EPro-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    border-radius: 20px;
+    padding:       2.5rem 2.25rem;
+    border:        1px solid rgba(180,160,255,0.18);
+    box-shadow:    0 4px 32px rgba(124,92,245,0.09), 0 1px 4px rgba(0,0,0,0.04);
+    animation:     EP-rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
   }
 
-  @keyframes EPro-rise {
-    from { opacity: 0; transform: translateY(24px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  @keyframes EP-rise {
+    from { opacity:0; transform: translateY(20px) scale(0.98); }
+    to   { opacity:1; transform: translateY(0)    scale(1);    }
   }
 
-  /* Header */
-  .EPro-header {
+  /* Progress */
+  .EP-progress-wrap {
     display:       flex;
     align-items:   center;
-    gap:           1rem;
-    margin-bottom: 1.75rem;
-    padding-bottom:1.5rem;
-    border-bottom: 1px solid #ede8ff;
+    gap:           0.75rem;
+    margin-bottom: 1.5rem;
   }
 
-  .EPro-avatar {
-    width:           50px;
-    height:          50px;
-    border-radius:   50%;
-    flex-shrink:     0;
+  .EP-progress-label {
+    font-size:   0.72rem;
+    font-weight: 600;
+    color:       #b8aedd;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .EP-progress-bar {
+    flex:          1;
+    height:        3px;
+    background:    #ede8ff;
+    border-radius: 99px;
+    overflow:      hidden;
+  }
+
+  .EP-progress-fill {
+    height:        100%;
+    width:         90%;
+    background:    linear-gradient(90deg, #7c5cf5, #ae6ed4);
+    border-radius: 99px;
+  }
+
+  /* Heading */
+  .EP-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size:   1.55rem;
+    font-weight: 400;
+    color:       #1a1530;
+    margin:      0 0 0.5rem;
+    line-height: 1.35;
+  }
+
+  .EP-subheading {
+    font-size:   0.855rem;
+    color:       #9e96b8;
+    margin:      0;
+    line-height: 1.6;
+  }
+
+  .EP-divider {
+    border:     none;
+    border-top: 1px solid #f0ecff;
+    margin:     1.75rem 0;
+  }
+
+  .EP-form { display: flex; flex-direction: column; gap: 0; }
+
+  /* Top row: photo + fields */
+  .EP-top-row {
+    display:   flex;
+    gap:       2.5rem;
+    align-items: flex-start;
+  }
+
+  /* Photo column */
+  .EP-photo-col {
+    display:        flex;
+    flex-direction: column;
+    align-items:    center;
+    gap:            0.75rem;
+    flex-shrink:    0;
+    width:          120px;
+  }
+
+  .EP-avatar-wrap {
+    position:      relative;
+    width:         88px;
+    height:        88px;
+  }
+
+  .EP-avatar-img,
+  .EP-avatar-initials {
+    width:         88px;
+    height:        88px;
+    border-radius: 50%;
+    object-fit:    cover;
+  }
+
+  .EP-avatar-initials {
     display:         flex;
     align-items:     center;
     justify-content: center;
     font-family:     'DM Serif Display', serif;
-    font-size:       1.05rem;
+    font-size:       1.5rem;
     color:           #fff;
     background:      linear-gradient(135deg, #9b7ef8, #cc7fd4);
-    box-shadow:      0 0 0 2px rgba(155, 126, 248, 0.3),
-                     0 4px 18px rgba(155, 126, 248, 0.22);
+    box-shadow:      0 0 0 3px rgba(155,126,248,0.2);
   }
 
-  .EPro-title {
-    font-family: 'DM Serif Display', serif;
-    font-size:   1.3rem;
-    font-weight: 400;
-    color:       #1a1530;
-    margin:      0 0 0.15rem;
+  .EP-avatar-add {
+    position:      absolute;
+    bottom:        2px;
+    right:         2px;
+    width:         24px;
+    height:        24px;
+    border-radius: 50%;
+    background:    linear-gradient(135deg, #7c5cf5, #ae6ed4);
+    color:         #fff;
+    font-size:     1rem;
+    line-height:   1;
+    border:        2px solid #fff;
+    cursor:        pointer;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+    padding:       0;
+    transition:    transform .15s;
+  }
+  .EP-avatar-add:hover { transform: scale(1.12); }
+
+  .EP-upload-btn {
+    height:        32px;
+    padding:       0 0.9rem;
+    border-radius: 8px;
+    border:        1.5px solid #9b7ef8;
+    background:    transparent;
+    color:         #7c5cf5;
+    font-family:   'DM Sans', sans-serif;
+    font-size:     0.78rem;
+    font-weight:   600;
+    cursor:        pointer;
+    white-space:   nowrap;
+    transition:    background .18s;
+  }
+  .EP-upload-btn:hover { background: #f0ecff; }
+
+  .EP-photo-hint {
+    font-size:   0.75rem;
+    color:       #e05c5c;
+    margin:      0;
+    text-align:  center;
+    display:     flex;
+    align-items: center;
+    gap:         4px;
   }
 
-  .EPro-subtitle {
-    font-size: 0.79rem;
-    color:     #9e96b8;
-    margin:    0;
+  /* Right fields column */
+  .EP-fields-col {
+    flex:    1;
+    display: flex;
+    flex-direction: column;
+    gap:     1rem;
+    min-width: 0;
   }
 
-  /* Fieldsets */
-  .EPro-fieldset {
-    border:  none;
-    margin:  0 0 1.35rem;
-    padding: 0;
-  }
-
-  .EPro-legend {
-    display:        block;
-    font-size:      0.67rem;
+  /* Section label */
+  .EP-section-label {
+    font-size:      0.7rem;
     font-weight:    600;
-    letter-spacing: 0.1em;
+    letter-spacing: .09em;
     text-transform: uppercase;
     color:          #b8aedd;
-    margin-bottom:  0.75rem;
+    margin-bottom:  1rem;
   }
 
-  .EPro-grid-2 {
-    display:               grid;
+  /* Grid layouts */
+  .EP-row-2 {
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap:            0.8rem;
+    gap: 0.85rem;
   }
 
-  /* Individual field */
-  .EPro-field {
+  .EP-row-addr {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .EP-row-3 {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  /* Field */
+  .EP-field {
     display:        flex;
     flex-direction: column;
-    gap:            0.28rem;
-    margin-bottom:  0.85rem;
+    gap:            0.3rem;
   }
 
-  .EPro-label {
-    font-size:   0.78rem;
+  .EP-label {
+    font-size:   0.8rem;
     font-weight: 500;
     color:       #4b4070;
   }
 
-  .EPro-input {
-    height:        40px;
-    padding:       0 0.85rem;
-    border:        1px solid #e0d9f5;
-    border-radius: 10px;
+  .EP-required { color: #7c5cf5; }
+
+  /* Input */
+  .EP-input {
+    height:        42px;
+    padding:       0 0.9rem;
+    border:        1.5px solid #e0d9f5;
+    border-radius: 8px;
+    font-family:   'DM Sans', sans-serif;
+    font-size:     0.875rem;
+    color:         #1a1530;
+    background:    #faf9ff;
+    outline:       none;
+    width:         100%;
+    box-sizing:    border-box;
+    transition:    border-color .2s, box-shadow .2s, background .2s;
+  }
+  .EP-input::placeholder { color: #c4bad8; }
+  .EP-input:hover  { border-color: #c0adf5; background: #fff; }
+  .EP-input:focus  { border-color: #9b7ef8; background: #fff; box-shadow: 0 0 0 3px rgba(155,126,248,.1); }
+  .EP-input--err   { border-color: #e05c5c !important; box-shadow: 0 0 0 3px rgba(224,92,92,.08) !important; }
+
+  /* Input with icon */
+  .EP-input-icon-wrap { position: relative; }
+  .EP-input-icon-wrap .EP-input { padding-right: 2.5rem; }
+  .EP-input-icon {
+    position:  absolute;
+    right:     0.75rem;
+    top:       50%;
+    transform: translateY(-50%);
+    color:     #b8aedd;
+    pointer-events: none;
+  }
+
+  /* Select */
+  .EP-select-wrap { position: relative; }
+  .EP-select {
+    appearance: none;
+    height:        42px;
+    padding:       0 2.2rem 0 0.9rem;
+    border:        1.5px solid #e0d9f5;
+    border-radius: 8px;
+    font-family:   'DM Sans', sans-serif;
+    font-size:     0.875rem;
+    color:         #1a1530;
+    background:    #faf9ff;
+    outline:       none;
+    width:         100%;
+    cursor:        pointer;
+    transition:    border-color .2s;
+  }
+  .EP-select:focus { border-color: #9b7ef8; box-shadow: 0 0 0 3px rgba(155,126,248,.1); }
+  .EP-select-arrow {
+    position:  absolute;
+    right:     0.75rem;
+    top:       50%;
+    transform: translateY(-50%);
+    color:     #b8aedd;
+    font-size: 0.7rem;
+    pointer-events: none;
+  }
+
+  /* Phone */
+  .EP-phone-wrap {
+    display: flex;
+    gap:     0.5rem;
+  }
+
+  .EP-phone-code-wrap {
+    position:   relative;
+    flex-shrink: 0;
+    width:      110px;
+  }
+
+  .EP-phone-code {
+    appearance:    none;
+    height:        42px;
+    padding:       0 2rem 0 0.75rem;
+    border:        1.5px solid #e0d9f5;
+    border-radius: 8px;
     font-family:   'DM Sans', sans-serif;
     font-size:     0.855rem;
     color:         #1a1530;
     background:    #faf9ff;
     outline:       none;
     width:         100%;
-    box-sizing:    border-box;
-    transition:    border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    cursor:        pointer;
   }
+  .EP-phone-code:focus { border-color: #9b7ef8; }
 
-  .EPro-input::placeholder { color: #c4bad8; }
+  .EP-phone-input { flex: 1; }
 
-  .EPro-input:hover {
-    border-color: #c0adf5;
-    background:   #fff;
-  }
-
-  .EPro-input:focus {
-    border-color: #9b7ef8;
-    background:   #fff;
-    box-shadow:   0 0 0 3px rgba(155, 126, 248, 0.12);
-  }
-
-  .EPro-input--error {
-    border-color: #e05c5c !important;
-    box-shadow:   0 0 0 3px rgba(224, 92, 92, 0.1) !important;
-  }
-
-  .EPro-field-error {
-    font-size:   0.73rem;
+  /* Error */
+  .EP-error {
+    display:     flex;
+    align-items: center;
+    gap:         5px;
+    font-size:   0.75rem;
     font-weight: 500;
-    color:       #d94f4f;
+    color:       #e05c5c;
   }
 
-  /* Action buttons */
-  .EPro-actions {
-    display:    flex;
-    gap:        0.7rem;
-    margin-top: 0.4rem;
+  .EP-error-dot {
+    display:         inline-flex;
+    align-items:     center;
+    justify-content: center;
+    width:           14px;
+    height:          14px;
+    border-radius:   50%;
+    background:      #e05c5c;
+    color:           #fff;
+    font-size:       0.65rem;
+    font-weight:     700;
+    flex-shrink:     0;
   }
 
-  .EPro-btn {
-    flex:          1;
-    height:        42px;
+  /* Actions */
+  .EP-actions {
+    display:         flex;
+    justify-content: space-between;
+    align-items:     center;
+    margin-top:      0.25rem;
+  }
+
+  .EP-btn {
+    height:        44px;
+    padding:       0 1.5rem;
     border-radius: 10px;
     font-family:   'DM Sans', sans-serif;
-    font-size:     0.855rem;
+    font-size:     0.9rem;
     font-weight:   600;
     cursor:        pointer;
     border:        none;
-    transition:    opacity 0.18s, transform 0.14s, box-shadow 0.18s, background 0.18s;
+    transition:    opacity .18s, transform .14s, box-shadow .18s;
   }
+  .EP-btn:active:not(:disabled) { transform: scale(0.97); }
+  .EP-btn:disabled               { opacity: .4; cursor: not-allowed; }
 
-  .EPro-btn:active:not(:disabled) { transform: scale(0.97); }
-  .EPro-btn:disabled               { opacity: 0.38; cursor: not-allowed; }
-
-  .EPro-btn--secondary {
+  .EP-btn--back {
     background: #f3f0fc;
     color:      #6b5fa0;
-    border:     1px solid #e0d9f5;
+    border:     1.5px solid #e0d9f5;
   }
-  .EPro-btn--secondary:hover:not(:disabled) {
-    background: #ebe6fa;
-  }
+  .EP-btn--back:hover:not(:disabled) { background: #ebe6fa; }
 
-  .EPro-btn--primary {
+  .EP-btn--submit {
     background: linear-gradient(135deg, #7c5cf5, #ae6ed4);
     color:      #fff;
-    box-shadow: 0 2px 16px rgba(124, 92, 245, 0.38);
+    box-shadow: 0 2px 16px rgba(124,92,245,.35);
   }
-  .EPro-btn--primary:hover:not(:disabled) {
-    opacity:    0.9;
-    box-shadow: 0 4px 22px rgba(124, 92, 245, 0.52);
-  }
+  .EP-btn--submit:hover:not(:disabled) { opacity:.9; box-shadow: 0 4px 22px rgba(124,92,245,.5); }
 
-  @media (max-width: 400px) {
-    .EPro-grid-2 { grid-template-columns: 1fr; }
-    .EPro-card   { padding: 1.75rem 1.25rem; }
+  /* Responsive */
+  @media (max-width: 600px) {
+    .EP-top-row   { flex-direction: column; align-items: center; }
+    .EP-photo-col { width: 100%; }
+    .EP-row-2,
+    .EP-row-addr,
+    .EP-row-3     { grid-template-columns: 1fr; }
+    .EP-card      { padding: 1.75rem 1.25rem; }
   }
 `;
 

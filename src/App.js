@@ -24,7 +24,6 @@ import Notifications from './pages/Notifications';
 import Workers from './pages/Workers';
 
 
-
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
