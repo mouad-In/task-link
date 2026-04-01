@@ -17,8 +17,23 @@ import { fetchTasks, setFilters, deleteTask } from '../features/tasks/tasksSlice
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { categories, urgencyLevels } from '../services/mockData';
 import Modal from '../components/ui/Modal';
+
+
+const categories = [
+  'Plumbing',
+  'Electrical',
+  'Cleaning',
+  'Moving',
+  'Repair',
+  'Other'
+];
+
+const urgencyLevels = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' }
+];
 
 const popularTags = [
   'logo design',

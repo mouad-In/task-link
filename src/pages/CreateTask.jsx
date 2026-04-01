@@ -8,7 +8,21 @@ import { createTask, updateTask, fetchTaskById } from '../features/tasks/tasksSl
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { categories, urgencyLevels } from '../services/mockData';
+
+const categories = [
+  'Plumbing',
+  'Electrical',
+  'Cleaning',
+  'Moving',
+  'Repair',
+  'Other'
+];
+
+const urgencyLevels = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' }
+];
 
 const CreateTask = ({ isEdit = false }) => {
   const { id } = useParams();
